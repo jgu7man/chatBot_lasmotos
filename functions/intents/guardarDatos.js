@@ -1,5 +1,5 @@
 /*jshint sub:true*/
-// /* jshint ignore:start */
+/* jshint esversion: 8 */
 
 const { Card, Suggestion, Text } = require('dialogflow-fulfillment');
 const fsActions = require('../actions/firestore');

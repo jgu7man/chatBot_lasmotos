@@ -1,4 +1,5 @@
-// /* jshint ignore:start */
+/* jshint ignore:start */
+/* jshint esversion: 8 */
 const fs = require('../firebase-admin');
 
 module.exports = {

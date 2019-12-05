@@ -1,4 +1,5 @@
 /*jshint sub:true*/
+/* jshint esversion: 8 */
 // /* jshint ignore:start */
 
 const { Card, Suggestion, Text } = require('dialogflow-fulfillment');

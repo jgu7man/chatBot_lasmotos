@@ -1,4 +1,5 @@
 /*jshint sub:true*/
+/* jshint esversion: 8 */
 const functions = require('firebase-functions');
 
 const { WebhookClient } = require('dialogflow-fulfillment');

@@ -1,4 +1,5 @@
 /*jshint sub:true*/
+/* jshint esversion: 8 */
 
 const { Card, Suggestion } = require('dialogflow-fulfillment'),
     webhookActions = require('../actions/webhook'),
