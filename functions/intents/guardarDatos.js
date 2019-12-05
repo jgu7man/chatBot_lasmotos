@@ -188,9 +188,8 @@ var confirmaDatos = async(agent) => {
     const
         confirma = agent.parameters['confirmaDatos'],
         contextos = await webhookActions.contextsNames(agent),
-        citaCont = agent.context.get('cita');
-    if (citaCont) { cita = citaCont.parameters; }
-    today = new Date();
+
+        today = new Date();
     var datosCont = agent.context.get('datos');
     var datos;
     if (datosCont) {
@@ -199,8 +198,22 @@ var confirmaDatos = async(agent) => {
         await datosDoc.revisionDatos(agent);
     }
 
+    if (datos.apellido) {
+        datos.nombre = `${datos.nombre} ${datos.apellido}`;
+    }
+
     var motivo = { fechayhora: today, motivo: '', via: 'chatbot' },
-        cliente = { nombre: datos.nombre, apellido: datos.apellido, telefono: datos.telefono, ciudad: datos.ubiacion };
+        cliente = {
+            nombre: datos.nombre,
+            telefono: datos.telefono,
+            ciudad: datos.ubiacion
+        };
+
+    if (datos.email) {
+        cliente.email = datos.email;
+    } else {
+        cliente.email = '';
+    }
 
 
     if (confirma == 'NO') {
@@ -215,6 +228,7 @@ var confirmaDatos = async(agent) => {
         agent.context.delete('autorizacion-followup');
         agent.context.delete('confirma-datos');
         agent.context.delete('autorizacion');
+
 
         // contexto Llamada
         if (contextos.includes('llamada')) {
@@ -232,25 +246,25 @@ var confirmaDatos = async(agent) => {
             // Contexto CITA
         } else if (contextos.includes('cita')) {
             console.log('guardarDatos 219: ', 'Confirma datos para cita');
-            var fecha = new Date(cita.fecha),
-                hora = new Date(cita.hora),
+            var fecha = new Date(datos.fecha),
+                hora = new Date(datos.hora),
                 dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
                 timeOptions = { hour: 'numeric', minute: 'numeric' },
-                citaModel = {
+                cita = {
                     dia: fecha,
                     hora: hora,
                     nombre: datos.nombre,
                     sucursal: datos.ciudad,
                     telefono: datos.telefono,
-                    motivo: datos.motivoCita
+                    motivo: datos.motivoCita + ' de garantía',
                 };
-            await fsActions.registrarCita(citaModel);
+            await fsActions.registrarCita(cita);
 
             var localFecha = fecha.toLocaleDateString('es-ES', dateOptions);
             var localHora = hora.toLocaleTimeString('es-ES', timeOptions);
             console.log('guardarDatos 227: ', fecha, hora);
 
-            motivo.motivo = `Agendó cita para ${fecha} a las ${hora}`;
+            motivo.motivo = `Agendó cita para ${localFecha} a las ${localHora}`;
 
 
             agent.add(`Muy bien Sr@ ${datos.nombre}. Te asignamos cita para el día: ${localFecha} a las ${localHora}. ¿Deseas alguna otra información?`);
@@ -270,7 +284,8 @@ var confirmaDatos = async(agent) => {
         }
 
 
-        fsActions.registrarCliente(cliente, motivo);
+        await fsActions.registrarCliente(cliente, motivo);
+        return;
     }
 };
 
@@ -285,8 +300,7 @@ var modificaDatos = (agent) => {
     if (params.email) { agent.add(`Email: ${params.email}`); }
     if (params.ciudad) { agent.add(`Ciudad: ${params.ubiacion}`); }
 
-    agent.add(new Suggestion('Sí, así es'));
-    agent.add(new Suggestion('No, no es así'));
+
     agent.context.set({ name: 'confirma-datos', lifespan: 2 });
 
 };

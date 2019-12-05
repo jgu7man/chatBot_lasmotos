@@ -238,7 +238,6 @@ var obtenerCiudad = async(agent) => {
         console.log('obtenerDatos 196: ', 'No reconoce ciudad');
         agent.add(`Sr@ ${datos.nombre}. Lastimosamente no tenemos sede en la ciudad de ${datos.ciudad}. No podríamos atenderte, a menos que puedas acercarte a la ciudad de Santa Marta o Riohacha.`);
         agent.add(`¿Puedes acercarte a:`);
-        agent.add(new Suggestion(`No`));
         agent.add(new Suggestion(`Riohacha`));
         agent.add(new Suggestion(`Santa Marta`));
         agent.context.delete('obtenerCiudad-followup');

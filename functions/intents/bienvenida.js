@@ -108,8 +108,7 @@ exports.bienvenida = async(agent) => {
         agent.add(saludo);
         agent.add(`Discúlpanos por cualquier inconveniente que hayas tenido con nosotros, nuestro número de teléfono para atención es 3008603210.`);
         agent.add('Queremos brindarte la mejor atención. ¿Te gustaría que te llamemos para atenderte personalmente?');
-        agent.add(new Suggestion('Sí'));
-        agent.add(new Suggestion('No'));
+
         agent.context.set({ name: 'llamada', lifespan: 50 });
         agent.context.set({ name: 'queja', lifespan: 5 });
 

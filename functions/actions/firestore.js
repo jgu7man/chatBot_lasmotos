@@ -4,18 +4,32 @@ const fs = require('../firebase-admin');
 module.exports = {
     registrarCliente: async function(cliente, motivo) {
         var idCliente;
+        // SortCliente
+        var client = {
+            nombre: cliente.nombre,
+            telefono: cliente.telefono,
+            ciudad: cliente.ciudad,
+            email: cliente.email,
+            ultimoContacto: new Date(),
+            via: 'ChatBot',
+            visto: false,
+        };
+
+
+
         // Comprobar si existe
         var clientes = await fs.collection('clientes').where('telefono', '==', cliente.telefono).get();
         if (clientes.size > 0) {
             idCliente = clientes.docs[0].id;
             registrarMotivo(idCliente, motivo);
         } else {
-            var clienteNuevo = await fs.collection('clientes').add(cliente);
+            var clienteNuevo = await fs.collection('clientes').add(client);
             await fs.collection('clientes').doc(clienteNuevo.id).update({
                 idCliente: clienteNuevo.id
             });
             var primerContacto = { fechayhora: new Date(), motivo: 'Registro Nuevo', via: '' };
             registrarMotivo(clienteNuevo.id, primerContacto);
+            registrarMotivo(clienteNuevo.id, motivo);
         }
     },
 
@@ -30,7 +44,7 @@ module.exports = {
     },
 
     actualizarUltimoContacto: function(id, via) {
-        console.log('firestore.js 33: Actualizar ultimo contacto: ', 'motivo: ', id, 'via: ', via);
+        console.log('firestore.js 33: Actualizar ultimo contacto: ', id, 'via: ', via);
         fs.collection('clientes').doc(id).update({
             ultimoContacto: new Date(),
             via: via,

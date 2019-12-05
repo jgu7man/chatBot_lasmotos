@@ -142,8 +142,7 @@ var infoMotosUsadas = async(agent) => {
     } else {
         agent.add(saludo);
         agent.add(`Actualmente no tenemos inventario de motos usadas. Te podemos ofrecer motos nuevas. ¿Estarías interesad@?`);
-        agent.add(new Suggestion('Sí'));
-        agent.add(new Suggestion('No'));
+
         agent.context.set({ name: 'bienvenida-folloup', lifespan: 2 });
         agent.context.set({ name: 'noHayMoto', lifespan: 10 });
     }

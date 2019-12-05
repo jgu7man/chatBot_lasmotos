@@ -51,8 +51,7 @@ var consultaCitaTaller = async(agent) => {
             } else if (datos.ciudad == 'Santa Marta') {
                 agent.add(`Sr@ ${datos.nombre}. Nuestro taller autorizado por Auteco está ubicado en ${sucursal.direccion}.`);
                 agent.add(`¿Le AGENDO la cita?`);
-                // agent.add(new Suggestion('Sí, me interesa'));
-                // agent.add(new Suggestion('No, gracias'));
+
                 agent.context.set({ name: 'agendaCita', lifespan: 2 });
 
             }
