@@ -90,18 +90,33 @@ module.exports = {
         console.log('firestore 75: Consulta evento próximo');
         const eventosCol = fs.collection('eventos');
         const eventoProxRes = await eventosCol
-            .where('ciudad', '==', ciudad)
-            .orderBy(fecha, "asc").get();
-        const eventoProximo = eventoProxRes.docs[0].data();
-        const evento = {
-            titulo: eventoProximo.titulo,
-            direccion: eventoProximo.direccion,
-            fechayhora: eventoProximo.fechayhora.toDate(),
-            fotoURL: eventoProximo.fotoURL,
-            descripcion: eventoProximo.descripcion,
-        };
+            .where('ciudadRef', '==', ciudad)
+            .orderBy('inicia', "asc").get();
 
-        return eventoProxRes.size > 0 ? evento : false;
+        if (eventoProxRes.size > 0) {
+            console.log(eventoProxRes.docs[0].data());
+            // const eventoProximo = eventoProxRes.docs[0].data();
+            var eventos = []
+            eventoProxRes.forEach(event => {
+                console.log(event);
+                eventos.push(event.data())
+            })
+            var eventoProximo = eventos[0]
+            const evento = {
+                direccion: eventoProximo.direccion,
+                inicia: eventoProximo.inicia.toDate(),
+                imgLugarUrl: eventoProximo.imgLugarUrl,
+                descripcion: eventoProximo.descripcion,
+                tipo: eventoProximo.tipo,
+                ciudad: eventoProximo.ciudad,
+                indicaciones: eventoProximo.indicaciones
+            };
+            return evento
+        } else {
+            return false
+        }
+
+        // return eventoProxRes.size > 0 ? evento : false;
     },
 
 

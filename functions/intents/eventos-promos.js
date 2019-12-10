@@ -46,16 +46,17 @@ exports.consultaEvento = async(agent) => {
             // Configurar fecha y hora
             let dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             let timeOptions = { hour: 'numeric', minute: 'numeric' };
-            let fecha = evento.fechayhora.toLocaleDateString('es-ES', dateOptions);
-            let hora = evento.fechayhora.toLocaleTimeString('es-ES', timeOptions);
+
+            let fecha = evento.inicia.toLocaleDateString('es-ES', dateOptions);
+            let hora = evento.inicia.toLocaleTimeString('es-ES', timeOptions);
             console.log('eventos-promos 35: ', fecha, hora);
 
 
 
             // crear CARD
-            let card = new Card(evento.titulo);
-            card.text(`${start} Tenemos un evento en ${evento.direccion} el día ${fecha} a las ${hora}. ${evento.descripcion}. ${end}`);
-            card.imageUrl(evento.fotoURL);
+            let card = new Card(evento.descripcion);
+            card.setText(`${start} Tenemos un evento de ${evento.tipo} en ${evento.direccion} el día ${fecha} a las ${hora}. Estaremos en ${evento.ciudad} por ${evento.indicaciones}. ${end}`);
+            card.setImage(evento.imgLugarUrl);
             agent.add(card);
 
 
