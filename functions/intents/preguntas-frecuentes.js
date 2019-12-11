@@ -3,6 +3,7 @@
 
 const { Card, Suggestion } = require('dialogflow-fulfillment');
 const webhookActions = require('../actions/webhook');
+const eventosPromoRes = require('./eventos-promos');
 
 async function FAQs(agent) {
 
@@ -62,6 +63,10 @@ async function FAQs(agent) {
         En Gaira y/o Santa Marta (Magdalena), estamos ubicados en la Carrera 4 # 20-45 Gaira, Rodadero, al frente del Mac Pollo de Gaira (incluye foto del local)
         En Riohacha (La Guajira), estamos ubicados en la Diagonal a la terminal de transporte (incluye foto del local)
         `);
+
+
+    } else if (params.consultaPromociones) {
+        await eventosPromoRes.promosVigentes(agent);
 
 
     }

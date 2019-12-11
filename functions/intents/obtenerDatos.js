@@ -214,7 +214,7 @@ var obtenerCiudad = async(agent) => {
 
     } else if (datos.ciudad && contextos.includes('credito')) {
         console.log('obtenerDatos 175: ', 'Preguntar si es reportado');
-        agent.add(`Bella ciudad ${datos.ciudad}. ¿Me podrías decir si estás reportad@?`);
+        agent.add(`Bella ciudad ${datos.ciudad}. Para realiza el estudio ¿Me podrías decir si estás reportad@?`);
 
         agent.context.set({ name: 'preguntarreportado', lifespan: 2 });
         agent.context.delete('obtenerubicacion-followup');
@@ -235,6 +235,10 @@ var obtenerCiudad = async(agent) => {
     } else if (datos.ciudad && contextos.includes('interesado')) {
         console.log('obtenerDatos 192: ', 'Respuesta de autorizacion');
         await datosDoc.revisionDatos(agent);
+
+    } else if (datos.ciudad && contextos.includes('promociones')) {
+        console.log('obtenerDatos 192: ', 'Respuesta de promociones');
+        await eventoResponse.promosVigentes(agent);
 
     } else {
         console.log('obtenerDatos 196: ', 'No reconoce ciudad');

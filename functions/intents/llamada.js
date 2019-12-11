@@ -32,7 +32,9 @@ exports.llamadaQuestion = async(agent) => {
         agent.add(`Entonces, sólo te podemos atender en nuestra sede si no nos permites llamarnos.`);
         if (datos.ciudad) {
             var sucursal = await fsActions.getSucursal(datos.ciudad);
-            agent.add(`Estamos ubicados en ${sucursal.direccion}. ¿Deseas alguna otra información?`);
+            var direccion;
+            if (sucursal) { direccion = sucursal.direccion; } else { direccion = ''; }
+            agent.add(`Estamos ubicados en ${direccion}. ¿Deseas alguna otra información?`);
         }
 
         await webhookActions.opciones(agent);

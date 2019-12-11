@@ -42,7 +42,10 @@ var consultaCitaTaller = async(agent) => {
 
             if (datos.ciudad == 'Riohacha') {
 
-                agent.add(`Sr@ ${datos.nombre}. En Riohacha no manejamos cita pero contamos con servicio de taller autorizado por auteco para que nos visites. Estamos ubicados en ${sucursal.direccion}.`);
+                agent.add(`Sr@ ${datos.nombre}. En Riohacha no manejamos cita pero contamos con servicio de taller autorizado por auteco para que nos visites. `);
+
+                if (sucursal) { agent.add(`Estamos ubicados en ${sucursal.direccion}.`); }
+
                 agent.add(`¿Deseas alguna otra información?`);
                 await webhookActions.opciones(agent);
 

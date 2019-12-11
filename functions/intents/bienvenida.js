@@ -168,6 +168,8 @@ exports.despedida = async(agent) => {
     agent.add(`Sr@ ${datos.nombre} Gracias por escribirnos. Cualquier duda por favor no dudes en escribirnos o visitarnos, que estés bien.`);
     if (datos.ciudad) {
         var sucursal = await fsActions.getSucursal(datos.ciudad);
+        var direccion;
+        if (sucursal) { direccion = sucursal.direccion; } else { direccion = ''; }
         agent.add(`Recuerda que estamos ubicados en ${sucursal.direccion} `);
     }
     webhookActions.borrarContextos(agent);

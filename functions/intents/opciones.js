@@ -126,7 +126,20 @@ opciones = async(agent) => {
                     eventoResponse.consultaEvento(agent);
                     // Responder en base a la ciudad
                 }
+
+
+
+
+                // CONTEXTO EVENTOS 
+            } else if (params.consultaPromociones) {
+                // Asignar contexto de eventos
+                console.log('opciones 113: ', 'Contexto eventos');
+                agent.context.set({ name: 'promociones', lifespan: 10 });
+
+                eventoResponse.promosVigentes(agent);
+
             }
+
         }
     }
 

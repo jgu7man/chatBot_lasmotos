@@ -79,17 +79,16 @@ var motoEquivalente = async(agent) => {
         datos = { nombre: '' };
     }
 
-    referencia = agent.parameters.referencia;
     equivalente = agent.parameters['equivalente'];
-    equivalenteAuteco = agent.parameters['equivalenteAuteco'];
-    agent.context.set({ name: 'datos', lifespan: 50, parameters: { referencia: referencia, equivalente: equivalente, equivalenteAuteco: equivalenteAuteco } });
+    referencia = agent.parameters['equivalenteAuteco'];
+    agent.context.set({ name: 'datos', lifespan: 50 });
 
 
     // Si el cliente ha preguntado por una moto o referencia, se le entrega la información en tarjetas
     console.log('motosInfo 72: ', 'Respuesta moto equivalente');
 
     // Obtiene la información de la moto
-    let moto = await fsActions.getMotoReferencia(equivalenteAuteco);
+    let moto = await fsActions.getMotoReferencia(referencia);
     console.log('motosInfo 76: ', moto);
 
     if (!moto) {

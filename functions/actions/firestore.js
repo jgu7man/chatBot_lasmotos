@@ -53,13 +53,17 @@ module.exports = {
         });
     },
 
-    getSucursal: async function(ciudad) {
+    getSucursal: async function(city) {
         console.log('firestore 42: Consulta sucursal');
+        var ciudad = city.trim()
         const sucRef = fs.collection('sucursales');
         var sucRes = await sucRef.where('ciudad', '==', ciudad).get();
-        var sucursal = sucRes.docs[0].data();
+        var sucursal;
+
         console.log('firestore 46: ', sucursal);
-        return sucursal;
+        return sucRes.size > 0 ?
+            sucursal = sucRes.docs[0].data() :
+            false
     },
 
     getMotoReferencia: async function(referencia) {
@@ -122,22 +126,41 @@ module.exports = {
 
     getPromosMes: async(fecha) => {
         console.log('firestore 94: Firestore consulta promos');
-        const promosCol = fs.collection('promociones');
-        const promosRes = await promosCol.where('desde', '<=', fecha).where('hasta', '>=', fecha).get();
+        var today = new Date
+        var startMonth, endMonth;
+        startMonth = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0)
 
-        const promociones = [];
-        promosRes.forEach(promo => {
-            var promocion = promo.data();
-            var vigHasta = promocion.hasta.toDate();
-            var vigDesde = promocion.desde.toDate();
-            promociones.push({
-                titulo: promocion.titulo,
-                desde: vigDesde,
-                hasta: vigHasta
+        today.getMonth == 1 ?
+            endMonth = new Date(today.getFullYear(), today.getMonth(), 28, 0, 0) :
+            endMonth = new Date(today.getFullYear(), today.getMonth(), 30, 0, 0)
+
+        console.log(startMonth, endMonth);
+
+        const promosCol = fs.collection('promos');
+        const promosRes = await promosCol
+            .orderBy('inicia')
+            .startAt(startMonth)
+            .endAt(endMonth).get()
+
+        if (promosRes.size > 0) {
+            const promociones = [];
+            promosRes.forEach(promo => {
+                var promocion = promo.data();
+                var vigHasta = promocion.inicia.toDate();
+                var vigDesde = promocion.termina.toDate();
+                promociones.push({
+                    nombre: promocion.nombre,
+                    desde: vigDesde,
+                    hasta: vigHasta,
+                    imagen: promocion.imagen,
+                    descripcion: promocion.descripcion
+                });
             });
-        });
+            return promociones;
+        } else {
+            return false
+        }
 
-        return promosRes.size > 0 ? prmociones : false;
 
     },
 

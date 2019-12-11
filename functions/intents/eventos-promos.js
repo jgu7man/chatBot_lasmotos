@@ -47,8 +47,8 @@ exports.consultaEvento = async(agent) => {
             let dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             let timeOptions = { hour: 'numeric', minute: 'numeric' };
 
-            let fecha = evento.inicia.toLocaleDateString('es-ES', dateOptions);
-            let hora = evento.inicia.toLocaleTimeString('es-ES', timeOptions);
+            let fecha = evento.inicia.toLocaleDateString('es-Es');
+            let hora = evento.inicia.toLocaleTimeString('es-ES');
             console.log('eventos-promos 35: ', fecha, hora);
 
 
@@ -121,14 +121,17 @@ exports.promosVigentes = async(agent) => {
         datosSolicitar = 'tu celular';
     }
 
-    const promos = await fsActions.getPromosMes();
+    const promos = await fsActions.getPromosMes(today);
 
     if (promos) {
         console.log('eventos-promos 113: ', 'Si hay promos');
         agent.add(`${start} Actualmente tenemos estas promociones para ti: `);
         promos.forEach(promo => {
-            let card = new Card(promo.titulo);
-            card.setText(`Vigencia: desde ${promo.desde}, hasta ${promo.hasta}`);
+            let desde = promo.desde.toLocaleDateString('es-Es');
+            let hasta = promo.hasta.toLocaleTimeString('es-ES');
+            let card = new Card(promo.nombre);
+            card.setText(`${promo.descripcion}. Vigencia: desde ${desde}, hasta ${hasta}`);
+            card.setImage(promo.imagen);
             agent.add(card);
         });
     } else {

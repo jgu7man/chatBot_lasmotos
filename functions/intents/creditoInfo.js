@@ -41,7 +41,9 @@ exports.reportadoQuestion = async(agent) => {
         sucursal = await fsActions.getSucursal(datos.ciudad);
         agent.add(`Te podemos ofrecer la posibilidad de crédito con cupo BRLLA. `);
         agent.add(new Text(cupoBrillaRequisitos));
-        agent.add(`Te invitamos a que pases a nuestra dirección en: ${sucursal. direccion}`);
+        if (sucursal) {
+            agent.add(`Te invitamos a que pases a nuestra dirección en: ${sucursal.direccion}`);
+        }
         agent.add(`¿Estarías interesad@ en alguna otra información?`);
 
         await webhookActions.opciones(agent);
@@ -190,12 +192,14 @@ exports.cumpleRequisitosCupobrilla = async(agent) => {
         await datosDoc.revisionDatos(agent);
     }
     var sucursal;
+    var direccion;
 
 
     if (action == 'cumpleRequisitos-yes') {
         console.log('creditoInfo 172: ', 'Cumple con los requisitos de cupobrilla');
         sucursal = await fsActions.getSucursal(datos.ciudad);
-        agent.add(`Entonces te invito a que traigas tus documentos a nuestra sede en ${sucursal.direccion} para poder tener el gusto de atenderte.`);
+        if (sucursal) { direccion = sucursal.direccion; } else { direccion = ''; }
+        agent.add(`Entonces te invito a que traigas tus documentos a nuestra sede en ${direccion} para poder tener el gusto de atenderte.`);
 
 
     } else if (action == 'cumpleRequisitos-no') {
@@ -206,7 +210,8 @@ exports.cumpleRequisitosCupobrilla = async(agent) => {
         console.log('creditoInfo 172: ', 'Recuerda requisitos de cupobrilla');
         agent.add(new Text(cupoBrillaRequisitos));
         sucursal = await fsActions.getSucursal(datos.ciudad);
-        agent.add(`Si cumples con estos requisitos, te esperamos en ${sucursal.ciudad} para tramitar tu crédito.`);
+        if (sucursal) { direccion = sucursal.direccion; } else { direccion = ''; }
+        agent.add(`Si cumples con estos requisitos, te esperamos en ${direccion} para tramitar tu crédito.`);
     }
 
     agent.add(`Te gustaría recibir más información sobre:`);
