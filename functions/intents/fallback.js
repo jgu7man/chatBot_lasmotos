@@ -12,3 +12,8 @@ exports.fallbackGeneral = async(agent) => {
 
 
 };
+
+exports.errorDeConsola = async(agent) => {
+    agent.add('Dusculpa, soy una asistente virtual y mi sistema falló. Tenemos asesores que pueden llamarte ¿Deseas que te atienda una asesor de verdad?');
+    agent.context.set({ name: 'llamada', lifespan: 2 });
+};

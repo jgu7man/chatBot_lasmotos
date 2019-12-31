@@ -94,7 +94,7 @@ var agendarCitaQuestion = async(agent) => {
 
 
 var motivoCita = async(agent) => {
-    const motivo = agent.parameters['motivosCita'];
+    const motivo = agent.parameters['motivoCita'];
     var intervalo;
 
     if (motivo == 'revision') { intervalo = 30; } else { intervalo = 15; }
@@ -148,10 +148,20 @@ var aceptaDejarMoto = async(agent) => {
 
 var obtenerFechaHora = async(agent) => {
     const
-        fecha = new Date(agent.parameters['fecha']),
-        hora = new Date(agent.parameters['hora']),
-        fechayhora = fecha + hora,
+        date = agent.parameters['fecha'],
+        fecha = date.split('T')[0],
+        year = fecha.split('-')[0],
+        month = fecha.split('-')[1],
+        day = fecha.split('-')[2],
+
+        time = agent.parameters['hora'];
+    tiempo = time.split('T')[1],
+        hora = tiempo.split(':')[0],
+        min = tiempo.split(':')[1],
+        fechayhora = new Date(Number(year), Number(month) - 1, Number(day), Number(hora), Number(min)),
         motivo = agent.context.get('cita').parameters['motivo'];
+
+    console.log(fechayhora);
     var intervalo;
 
     if (motivo == 'garantia') { intervalo = 30; } else { intervalo = 15; }
@@ -159,6 +169,7 @@ var obtenerFechaHora = async(agent) => {
 
     var disponivilidad = await fsActions.getDisponibildadCita(fechayhora);
     if (disponivilidad == 'disponible') {
+        agent.context.set({ name: 'datos', lifespan: 50, parameters: { citafecha: fechayhora } });
         agent.add(`Muy bien, tenemos disponibilidad para esa hora.`);
         agent.add(`Para agendar la cita necesitamos tomarte unos datos personales y necesitamos que nos AUTORICES guardarlos. ¿Aceptas?`);
 
@@ -182,11 +193,13 @@ var obtenerPlaca = async(agent) => {
     } else {
         await datosDoc.revisionDatos(agent);
     }
+
+    if (datos.numCelular) { datos.celular = datos.numCelular; }
     const placa = agent.parameters.placa;
 
     agent.add(`Muchas gracias. ¿Me confirmas entonces que estos son tus datos? Sólo para estar seguros`);
     agent.add(`Nombre: ${datos.nombre} ${datos.apellido}`);
-    agent.add(`Celular: ${datos.telefono}`);
+    agent.add(`Celular: ${datos.celular}`);
     agent.add(`Ciudad: ${datos.ciudad}`);
     agent.add(`Placa: ${placa}`);
 

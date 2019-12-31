@@ -7,6 +7,7 @@ const fsActions = require('../actions/firestore');
 const motosResponse = require('./motosInfo');
 const citaResponse = require('./citasTaller');
 const datosDoc = require('../intents/guardarDatos');
+const obtenerDatos = require('./obtenerDatos');
 
 exports.bienvenida = async(agent) => {
 
@@ -110,7 +111,7 @@ exports.bienvenida = async(agent) => {
         agent.add(`Discúlpanos por cualquier inconveniente que hayas tenido con nosotros, nuestro número de teléfono para atención es 3008603210.`);
         agent.add('Queremos brindarte la mejor atención. ¿Te gustaría que te llamemos para atenderte personalmente?');
 
-        agent.context.set({ name: 'llamada', lifespan: 50 });
+        agent.context.set({ name: 'llamada', lifespan: 5 });
         agent.context.set({ name: 'queja', lifespan: 5 });
 
 
@@ -131,26 +132,7 @@ exports.bienvenida = async(agent) => {
 };
 
 exports.preDespedida = async(agent) => {
-    var datosCont = agent.context.get('datos');
-    var datos;
-    if (datosCont) {
-        datos = datosCont.parameters;
-    } else {
-        datos = { email: '', telefono: '' };
-    }
-    var datosSolicitar;
-
-    if (!datos.email && !datos.telefono) {
-        datosSolicitar = 'tu correo o tu celular';
-    } else if (!datos.email && datos.telefono) {
-        datosSolicitar = 'tu correo';
-    } else if (datos.email && !datos.telefono) {
-        datosSolicitar = 'tu celular';
-    }
-
-    console.log('bienvenida 150: ', 'Consulta suscripción');
-
-    agent.add(`Sr@ ${datos.nombre} ¿Estarías interesado en regalarnos ${datosSolicitar} para enviarte información sobre nuestras promociones y eventos?`);
+    await obtenerDatos.obtenerCelularEmail(agent);
     agent.context.set({ name: 'despedida', lifespan: 2 });
     agent.context.set({ name: 'suscripcion', lifespan: 3 });
 };

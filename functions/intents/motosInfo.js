@@ -32,37 +32,48 @@ var motoCard = async(agent) => {
     }
     if (!referencia && datos) { referencia = datos.referencia; }
 
-
-
-    // Si el cliente ha preguntado por una moto o referencia, se le entrega la información en tarjetas
-    console.log('motosInfo 32: ', 'Respuesta moto');
-
-    // Obtiene la información de la moto
-    let moto = await fsActions.getMotoReferencia(referencia);
-    console.log('motosInfo 36: ', moto);
-    agent.context.set({ name: 'datos', lifespan: 50, parameters: { referencia: referencia } });
-
-    if (!moto) {
-        console.log('motosInfo 39: ', 'No hay moto');
-        agent.add(`Lo siento, actualmente no la tenemos en sala, pero si estás interesado la podemos traer. ¿Te interesa?`);
-        agent.context.set({ name: 'interesado', lifespan: 50 });
-        agent.context.set({ name: 'noHayMoto', lifespan: 10 });
-        agent.context.set({ name: 'consultamoto-followup', lifespan: 2 });
-
+    if (referencia == 'PULSAR') {
+        agent.add(`¿A cuál moto pulsar te refieres?`);
+        agent.add(new Suggestion('NS200'));
+        agent.add(new Suggestion('NS160'));
+        agent.add(new Suggestion('SPEED'));
+        agent.add(new Suggestion('NS125'));
+        agent.context.set({ name: 'getMoto', lifespan: 2 });
     } else {
-        console.log('motosInfo 44: ', 'Si hay moto');
-        let SOAT;
-        if (moto.SOAT_matricula) { SOAT = 'incluye el valor del SOAT y matrícula'; } else { SOAT = 'no incluye el valor del SOAT ni matrícula'; }
 
-        let card = new Card(moto.referencia);
-        card.setText(`Claro, nosotros manejamos la ${moto.referencia} y tiene un valor de ${moto.precio} ${SOAT}.`);
-        card.setImage(moto.imagenUrl);
-        card.setButton({ text: 'Ver en el catálogo', url: 'https://tiendalasmotos.com.co' });
-        agent.add(card);
-        agent.context.delete('moto');
-        agent.context.set({ name: 'yaDioInfoMoto', lifespan: 10 });
-        agent.add('¿Deseas saber opciones de crédito para esta moto?');
-        agent.context.set({ name: 'moto-credito', lifespan: 10 });
+
+
+        // Si el cliente ha preguntado por una moto o referencia, se le entrega la información en tarjetas
+        console.log('motosInfo 32: ', 'Respuesta moto');
+
+        // Obtiene la información de la moto
+        let moto = await fsActions.getMotoReferencia(referencia);
+        console.log('motosInfo 36: ', moto);
+        agent.context.set({ name: 'datos', lifespan: 50, parameters: { referencia: referencia } });
+
+        if (!moto) {
+            console.log('motosInfo 39: ', 'No hay moto');
+            agent.add(`Lo siento, actualmente no la tenemos en sala, pero si estás interesado la podemos traer. ¿Te interesa?`);
+            agent.context.set({ name: 'interesado', lifespan: 50 });
+            agent.context.set({ name: 'noHayMoto', lifespan: 10 });
+            agent.context.set({ name: 'consultamoto-followup', lifespan: 2 });
+
+        } else {
+            console.log('motosInfo 44: ', 'Si hay moto');
+            let SOAT;
+            if (moto.SOAT_matricula) { SOAT = 'incluye el valor del SOAT y matrícula'; } else { SOAT = 'no incluye el valor del SOAT ni matrícula'; }
+
+            let card = new Card(moto.referencia);
+            card.setText(`Claro, nosotros manejamos la ${moto.referencia} y tiene un valor de ${moto.precio} ${SOAT}.`);
+            card.setImage(moto.imagenUrl);
+            card.setButton({ text: 'Ver en el catálogo', url: 'https://tiendalasmotos.com.co' });
+            agent.add(card);
+            agent.context.delete('getmoto');
+            agent.context.set({ name: 'yaDioInfoMoto', lifespan: 10 });
+            agent.add('¿Deseas saber opciones de crédito para esta moto?');
+            agent.context.set({ name: 'moto-credito', lifespan: 10 });
+            // await despuesDeMoto(agent);
+        }
     }
 
 };
@@ -188,6 +199,7 @@ var consultaMoto_yes = async(agent) => {
     agent.add(`Ok, Sr@ ${datos.nombre} Necesitaré tomar sus datos para llamarle. Por ley, debe AUTORIZAR que guardemos sus datos. ¿Autorizas que guardemos tus datos?`);
     agent.context.set({ name: 'autorizacion', lifespan: 5 });
     agent.context.set({ name: 'suscripcion', lifespan: 15 });
+    agent.context.delete('Consultamoto-followup');
 
 
 };

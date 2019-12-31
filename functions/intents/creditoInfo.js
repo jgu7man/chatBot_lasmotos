@@ -53,7 +53,7 @@ exports.reportadoQuestion = async(agent) => {
     } else if (reportado == 'NO') {
         agent.add(`Debes tener cédula, correo electrónico y contestar personalmente la llamada que te realizaremos. ¿Sería posible?`);
 
-        agent.context.set({ name: 'llamada', lifespan: 10 });
+        agent.context.set({ name: 'llamada', lifespan: 2 });
         agent.context.delete('preguntarreportado');
 
 
@@ -149,7 +149,7 @@ exports.valorAdeudo = async(agent) => {
         console.log('creditoInfo 126: ', 'adeudo menor a 1 millon');
         agent.add(`Muy bien Sr@ ${datos.nombre} Debes tener cédula, correo electrónico y contestar personalmente la llamada que te realizaremos. ¿Sería posible?`);
 
-        agent.context.set({ name: 'llamada', lifespan: 10 });
+        agent.context.set({ name: 'llamada', lifespan: 2 });
         await webhookActions.borrarContextos(agent);
 
 
@@ -169,7 +169,7 @@ exports.valorAdeudo = async(agent) => {
         agent.add(`No te preocupes, Sr@ ${datos.nombre}. Te podemos ayudar a averiguar.`);
         agent.add(`Debes tener cédula, correo electrónico y contestar personalmente la llamada que te realizaremos. ¿Sería posible?`);
 
-        agent.context.set({ name: 'llamada', lifespan: 10 });
+        agent.context.set({ name: 'llamada', lifespan: 2 });
         await webhookActions.borrarContextos(agent);
 
 
@@ -177,7 +177,7 @@ exports.valorAdeudo = async(agent) => {
     } else {
         agent.add(`Si lo deseas te podemos atender vía telefónica. ¿Deseas que te llamemos?`);
 
-        agent.context.set({ name: 'llamada', lifespan: 10 });
+        agent.context.set({ name: 'llamada', lifespan: 2 });
         await webhookActions.borrarContextos(agent);
     }
 };

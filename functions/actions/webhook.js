@@ -21,9 +21,11 @@ var borrarContextos = async(agent) => {
 
     // Borra todos los datos execpto el de datos para conservarlos
     agent.contexts.forEach(cont => {
-        if (cont.name != 'datos' || cont.name != 'opciones') {
-            console.log('webhook 24: ', 'contexto borrado: ', cont.name);
-            agent.context.delete(cont.name);
+        if (cont.name != 'datos') {
+            if (cont.name != 'opciones') {
+                console.log('webhook 24: ', 'contexto borrado: ', cont.name);
+                agent.context.delete(cont.name);
+            }
         }
     });
 };

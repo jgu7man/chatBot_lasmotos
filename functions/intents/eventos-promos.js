@@ -6,6 +6,7 @@ const { Card, Suggestion } = require('dialogflow-fulfillment'),
     webhookActions = require('../actions/webhook'),
     fsActions = require('../actions/firestore');
 const datosDoc = require('../intents/guardarDatos');
+const obtnerDatos = require('./obtenerDatos');
 
 exports.consultaEvento = async(agent) => {
     agent.context.set({ name: 'evento', lifespan: 10 });
@@ -25,16 +26,6 @@ exports.consultaEvento = async(agent) => {
     } else {
         start = 'Claro';
         end = '¿Me puedes decir tu nombre para saber con quién tengo el gusto?';
-    }
-
-    var datosSolicitar;
-
-    if (!datos.email && !datos.telefono) {
-        datosSolicitar = 'tu correo o tu celular';
-    } else if (!datos.email && datos.telefono) {
-        datosSolicitar = 'tu correo';
-    } else if (datos.email && !datos.telefono) {
-        datosSolicitar = 'tu celular';
     }
 
     if (datos.ciudad) {
@@ -67,8 +58,7 @@ exports.consultaEvento = async(agent) => {
 
         }
 
-        agent.add(`Sr@ ${datos.nombre} ¿Estarías interesado en regalarnos ${datosSolicitar} para enviarte información sobre nuestras promociones y eventos?`);
-        agent.context.set({ name: 'suscripcion', lifespan: 3 });
+        await obtnerDatos.obtenerCelularEmail(agent);
 
 
 
@@ -111,15 +101,7 @@ exports.promosVigentes = async(agent) => {
         end = '¿Me puedes decir tu nombre para saber con quién tengo el gusto?';
     }
 
-    var datosSolicitar;
 
-    if (!datos.email && !datos.telefono) {
-        datosSolicitar = 'tu correo o tu celular';
-    } else if (!datos.email && datos.telefono) {
-        datosSolicitar = 'tu correo';
-    } else if (datos.email && !datos.telefono) {
-        datosSolicitar = 'tu celular';
-    }
 
     const promos = await fsActions.getPromosMes(today);
 
@@ -139,14 +121,9 @@ exports.promosVigentes = async(agent) => {
         agent.add(`${datos.nombre} Lo siento, por ahora no tenemos alguna promoción`);
     }
 
-    agent.add(`Sr@ ${datos.nombre} ¿Estarías interesado en regalarnos ${datosSolicitar} para enviarte información sobre nuestras promociones y eventos?`);
-    agent.context.set({ name: 'suscripcion', lifespan: 3 });
+    await obtnerDatos.obtenerCelularEmail(agent);
 
 };
-
-class Cliente {
-    constructor(nombre, apellido, ciudad, telefono, email, tipoCliente) {}
-}
 
 
 
@@ -156,7 +133,7 @@ exports.suscripcion = async(agent) => {
     if (datosCont) {
         datos = datosCont.parameters;
     } else {
-        datos = { nombre: '', email: '', telefono: '' };
+        datos = { nombre: '', email: '', celular: '' };
     }
     params = agent.params;
 
@@ -169,11 +146,11 @@ exports.suscripcion = async(agent) => {
     } else {
 
         console.log('eventos-promos 149: ', 'Se quiere suscribir');
-        if (!datos.email && datos.telefono) {
+        if (!datos.email && (datos.celular || datos.numCelular)) {
             console.log('eventos-promos 151: ', 'Falta email');
             agent.add(`Gracias, ¿Tienes correo electrónico para proporcionarme?`);
-        } else if (datos.email && !datos.telefono) {
-            console.log('eventos-promos 154: ', 'Falta telefono');
+        } else if (datos.email && (!datos.celular || !datos.numCelular)) {
+            console.log('eventos-promos 154: ', 'Falta celular');
             agent.add(`Gracias, ¿Me proporcionas tu celular?`);
         } else {
 

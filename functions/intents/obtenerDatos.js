@@ -1,6 +1,5 @@
-// /*jshint sub:true*/
 /* jshint esversion: 8 */
-// /* jshint esversion: 8 */ 
+/*jshint -W030 */
 
 const { Card, Suggestion } = require('dialogflow-fulfillment');
 const fsActions = require('../actions/firestore');
@@ -15,14 +14,7 @@ const bienvenidaResponse = require('./bienvenida');
 var obtenerNombre = async(agent) => {
     const givenName = agent.parameters.nombre;
     var nombre, datos;
-    if (typeof givenName == 'object') {
-        nombre = givenName['given-name'];
-    }
-    var datosCont = agent.context.get('datos');
-    if (datosCont) {
-        datos = datosCont.parameters;
-        if (datos.nombre) { nombre = datos.nombre; } else { nombre = ''; }
-    }
+    nombre = givenName.name;
 
     contextos = await webhookActions.contextsNames(agent); //Método para extraer los nombres de los contextos
 
@@ -33,20 +25,21 @@ var obtenerNombre = async(agent) => {
         agent.add(`Disculpa, soy una asistente virtual y no pude registrar tu nombre.  ¿Puedes escribir sólo tu nombre?`);
         agent.context.set({ name: 'datos', lifespan: 2, parameters: { nombre: nombre } });
 
-    } else if (nombre && datos.apellido) {
-        console.log('obtenerDatos 27: ', 'Dio nombre y apellido');
-        agent.add(`Me puedes confirmar que tu nombre es ${nombre} y tu apellido es ${datos.apellido}`);
+        // } else if (nombre && datos.apellido) {
+        //     console.log('obtenerDatos 27: ', 'Dio nombre y apellido');
+        //     agent.add(`Me puedes confirmar que tu nombre es ${nombre} y tu apellido es ${datos.apellido}`);
 
-        agent.context.set({ name: 'confirmaNombreApellido', lifespan: 2, parameters: { nombre: nombre, apellido: datos.apellido } });
+        //     agent.context.set({ name: 'confirmaNombreApellido', lifespan: 2, parameters: { nombre: nombre, apellido: datos.apellido } });
 
     } else if (nombre != '') {
         // Si exist el nombre se configura el agradecimiento con el nombre
         console.log('obtenerDatos 34: ', 'hay nombre: ', nombre);
         const gracias = `Muchas gracias Sr@ ${nombre}`;
         agent.context.delete('getNombre');
+        agent.context.set({ name: 'datos', lifespan: 50, parameters: { nombre: nombre } });
 
 
-        if (contextos.includes('autorizacion')) {
+        if (contextos.includes('autorizacion') || contextos.includes('deseallamada')) {
             // webhook especial para solicitar datos después de autorización
             console.log('obtenerDatos 41: ', 'Respuestas autorización');
             await datosDoc.revisionDatos(agent);
@@ -212,9 +205,14 @@ var obtenerCiudad = async(agent) => {
 
 
 
-    } else if (datos.ciudad && contextos.includes('credito')) {
+    } else if (datos.ciudad && (contextos.includes('credito') ||
+            contextos.includes('moto-credito'))) {
         console.log('obtenerDatos 175: ', 'Preguntar si es reportado');
-        agent.add(`Bella ciudad ${datos.ciudad}. Para realiza el estudio ¿Me podrías decir si estás reportad@?`);
+        if (datos.reportado == 'reportado') {
+            agent.add(`Bella ciudad ${datos.ciudad}. ¿Seguro que estás reportado?`);
+        } else {
+            agent.add(`Bella ciudad ${datos.ciudad}. Para realiza el estudio ¿Me podrías decir si estás reportad@?`);
+        }
 
         agent.context.set({ name: 'preguntarreportado', lifespan: 2 });
         agent.context.delete('obtenerubicacion-followup');
@@ -228,12 +226,11 @@ var obtenerCiudad = async(agent) => {
         console.log('obtenerDatos 188: ', 'Respuesta de cita');
         await citaResponse.consultaCitaTaller(agent);
 
-    } else if (datos.ciudad && contextos.includes('llamada')) {
-        console.log('obtenerDatos 192: ', 'Respuesta de llamada');
-        await datosDoc.revisionDatos(agent);
+    } else if (datos.ciudad &&
+        (contextos.includes('deseallamada') ||
+            contextos.includes('interesado'))) {
 
-    } else if (datos.ciudad && contextos.includes('interesado')) {
-        console.log('obtenerDatos 192: ', 'Respuesta de autorizacion');
+        console.log('obtenerDatos 192: ', 'Respuesta de llamada');
         await datosDoc.revisionDatos(agent);
 
     } else if (datos.ciudad && contextos.includes('promociones')) {
@@ -283,79 +280,68 @@ var obtenerCiudad_no = async(agent) => {
 
 
 
-var obtenerTelefono = async(agent) => {
+var obtenerCelular = async(agent) => {
 
     var datosCont = agent.context.get('datos');
     var datos;
-    if (datosCont) {
-        datos = datosCont.parameters;
-    } else {
+    datosCont ?
+        (datos = datosCont.parameters) :
         await datosDoc.revisionDatos(agent);
+
+    if (datos.numCelular) {
+        datos.celular = datos.numCelular;
     }
+
     contextos = await webhookActions.contextsNames(agent);
 
-    if (!datos.ciudad || datos.ciudad == '' || datos.ciudad == undefined) {
-        agent.add(`Gracias Sr@ ${datos.nombre}. ¿Me puedes decir en qué ciudad te encuentras?`);
-        agent.context.set({ name: 'getCiudad', lifespan: 2 });
-
-
-    } else if (!datos.telefono) {
+    if (!datos.celular && !datos.numCelular) {
 
         agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu celular?`);
-        agent.context.set({ name: 'getTelefono', lifespan: 2 });
+        agent.context.set({ name: 'getcelular', lifespan: 2 });
 
     } else {
 
-        agent.context.delete('getTelefono');
+        var long = String(datos.celular).length;
+        if (long != 10) {
+            agent.add(`Sr@ ${datos.nombre}. El número que ingresaste no es válido, debe contener 10 dígitos. ¿puedes repetir tu celular, por favor?`);
+            agent.context.set({ name: 'getcelular', lifespan: 2 });
+        } else {
+            agent.context.delete('getcelular');
 
-        if (contextos.includes('llamadas')) {
-            llamadaResponse.confirmarDatosLlamada(agent);
-        } else if (contextos.includes('cita')) {
-            agent.add('Regálame por favor, el número de placa de la moto.');
-            agent.context.set({ name: 'getPlaca', lifespan: 3 });
-            agent.context.set({ name: 'Obtenerfechayhora-followup', lifespan: 5 });
+            if (contextos.includes('deseallamada') || contextos.includes('moto-credito')) {
+                await datosDoc.revisionDatos(agent);
+            } else if (contextos.includes('cita')) {
+                agent.add('Regálame por favor, el número de placa de la moto.');
+                agent.context.set({ name: 'getPlaca', lifespan: 3 });
+                agent.context.set({ name: 'Obtenerfechayhora-followup', lifespan: 5 });
+            }
         }
     }
 
 };
 
 
-var obtenerTelefonoEmail = async(agent) => {
-    const
-        datos = await webhookActions.getDatos(agent),
-        contextos = await webhookActions.contextsNames(agent);
-
-    if (!datos.email && !datos.telefono) {
-        agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu teléfono y tu correo electrónico?`);
-        agent.context.set({ name: 'getEmail' });
-
-    } else if (!datos.email && datos.telefono) {
-        agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu correo electrónico?`);
-        agent.context.set({ name: 'getEmail' });
-
+var obtenerCelularEmail = async(agent) => {
+    var datosCont = agent.context.get('datos');
+    var datos;
+    if (datosCont) {
+        datos = datosCont.parameters;
     } else {
-        agent.context.delete('getEamil');
-        // Contextos...
-
-        if (contextos.includes('llamada')) {
-            console.log('obtenerDatos 284: ', 'Respuesta de llamada');
-            llamadaResponse.confirmarDatosLlamada(agent);
-        } else if (contextos.includes('despedida')) {
-            // Guardar datos
-            var motivo = { fechayhora: today, motivo: 'Suscripción para eventos y promociones', via: 'chatbot' },
-                cliente = { nombre: datos.nombre, apellido: datos.apellido, telefono: datos.telefono, ciudad: datos.ciudad, email: datos.email, tipoCliente: ['suscripcion'] };
-
-            fsActions.registrarCliente(cliente, motivo);
-
-
-            await bienvenidaResponse.despedida(agent);
-
-        }
-
-
-
-
+        datos = { email: '', celular: '' };
     }
+    var datosSolicitar;
+
+    if (!datos.email && (!datos.numCelular || !datos.celular)) {
+        datosSolicitar = 'tu correo o tu celular';
+    } else if (!datos.email && (datos.numCelular || datos.celular)) {
+        datosSolicitar = 'tu correo';
+    } else if (datos.email && (!datos.numCelular || !datos.celular)) {
+        datosSolicitar = 'tu celular';
+    }
+
+    console.log('bienvenida 150: ', 'Consulta suscripción');
+
+    agent.add(`Sr@ ${datos.nombre} ¿Estarías interesado en regalarnos ${datosSolicitar} para enviarte información sobre nuestras promociones y eventos?`);
 };
 
 
@@ -364,6 +350,6 @@ module.exports = {
     obtenerApellido: obtenerApellido,
     obtenerCiudad: obtenerCiudad,
     obtenerCiudad_no: obtenerCiudad_no,
-    obtenerTelefono: obtenerTelefono,
-    obtenerTelefonoEmail: obtenerTelefonoEmail,
+    obtenerCelular: obtenerCelular,
+    obtenerCelularEmail: obtenerCelularEmail,
 };

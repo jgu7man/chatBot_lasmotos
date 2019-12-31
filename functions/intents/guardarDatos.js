@@ -58,37 +58,45 @@ var revisionDatos = async(agent) => {
         datos = { nombre: '' };
     }
 
-    if (!datos || datos.nombre == undefined ||
-        !datos.nombre || datos.nombre == '') {
+    console.log(datos);
+
+    if (!datos || !datos.nombre) {
         console.log('guardarDatos 50: ', 'No hay nombre');
         agent.add(`Gracias por aceptar. ¿Me puedes decir tu nombre y apellido?`);
         agent.context.set({ name: 'getNombre', lifespan: 2 });
         agent.context.set({ name: 'datos', lifespan: 50 });
 
 
-    } else if (!datos.apellido || datos.apellido == '' || datos.apellido == undefined) {
-        console.log('guardarDatos 56: ', 'No hay apellido');
-        agent.add(`Gracias Sr@ ${datos.nombre} por aceptar. ¿Me puedes decir tu apellido o apellidos?`);
-        agent.context.set({ name: 'getApellido', lifespan: 3 });
+        // } else if (!datos.apellido || datos.apellido.length == 0) {
 
-    } else if (!datos.telefono || datos.telefono == '' || datos.telefono == undefined) {
-        console.log('guardarDatos 61: ', 'No hay telefono');
-        agent.add(`Gracias Sr@ ${datos.nombre} por aceptar. ¿Me puedes decir tu celular?`);
-        agent.context.set({ name: 'getTelefono', lifespan: 2 });
+        //     console.log('guardarDatos 56: ', 'No hay apellido');
+        //     agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu apellido o apellidos?`);
+        //     agent.context.set({ name: 'getApellido', lifespan: 3 });
 
-
-    } else if (!datos.ciudad || datos.ciudad == '' || datos.ciudad == undefined) {
+    } else if (!datos.ciudad) {
         console.log('guardarDatos 67: ', 'No hay ciudad');
-        agent.add(`Gracias Sr@ ${datos.nombre} por aceptar. ¿Me puedes decir en qué ciudad te encuentras para saber de qué manera podemos atenderte?`);
+        agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir en qué ciudad te encuentras para saber de qué manera podemos atenderte?`);
         agent.add(new Suggestion(`Riohacha`));
         agent.add(new Suggestion(`Santa Marta`));
         agent.add(new Suggestion(`Otro`));
         agent.context.set({ name: 'getCiudad', lifespan: 2 });
 
 
+    } else if (!datos.celular && !datos.numCelular) {
+        console.log('guardarDatos 61: ', 'No hay celular');
+        agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu celular?`);
+        agent.context.set({ name: 'getcelular', lifespan: 2 });
+
+
     } else {
+
+        agent.context.delete('obtenerubicacion-followup');
+        agent.context.delete('getNombre');
+        agent.context.delete('getCiudad');
+        agent.context.delete('getCelular');
+
         console.log('guardarDatos 76: ', 'Hay todos los datos');
-        if (contextos.includes('llamada') ||
+        if (contextos.includes('deseallamada') ||
             contextos.includes('moto-credito') ||
             contextos.includes('interesado')) {
 
@@ -185,36 +193,33 @@ var confirmaNombreApellido = async(agent) => {
 
 
 var confirmaDatos = async(agent) => {
+    console.log('respuestas de confirmar datos');
     const
         confirma = agent.parameters['confirmaDatos'],
         contextos = await webhookActions.contextsNames(agent),
-
         today = new Date();
-    var datosCont = agent.context.get('datos');
-    var datos;
+    var datosCont = agent.context.get('datos'),
+        datos, cliente, motivo, datosCredito, suscripcion;
     if (datosCont) {
         datos = datosCont.parameters;
-    } else {
-        await datosDoc.revisionDatos(agent);
+        console.log('Sí hay contexto datos');
     }
 
-    if (datos.apellido) {
-        datos.nombre = `${datos.nombre} ${datos.apellido}`;
-    }
+    if (datos.apellido) { datos.nombre = `${datos.nombre} ${datos.apellido}`; }
+    if (datos.numCelular) { datos.celular = datos.numCelular; }
+    if (!datos.email) { datos['email'] = ''; }
 
-    var motivo = { fechayhora: today, motivo: '', via: 'chatbot' },
-        cliente = {
-            nombre: datos.nombre,
-            telefono: datos.telefono,
-            ciudad: datos.ubiacion
-        };
 
-    if (datos.email) {
-        cliente.email = datos.email;
-    } else {
-        cliente.email = '';
-    }
+    motivo = { fechayhora: today, motivo: '', via: 'chatbot' };
+    cliente = {
+        nombre: datos.nombre,
+        celular: datos.celular,
+        ciudad: datos.ciudad,
+        email: datos.email
+    };
 
+
+    console.log('confirma? ', confirma);
 
     if (confirma == 'NO') {
         console.log('guardarDatos 192: ', 'No confirma');
@@ -228,12 +233,30 @@ var confirmaDatos = async(agent) => {
         agent.context.delete('autorizacion-followup');
         agent.context.delete('confirma-datos');
         agent.context.delete('autorizacion');
+        agent.context.delete('__system_counters__');
 
 
         // contexto Llamada
-        if (contextos.includes('llamada')) {
+        if (contextos.includes('deseallamada') ||
+            contextos.includes('credito') ||
+            contextos.includes('moto-credito')) {
             console.log('guardarDatos 206: ', 'Confirma datos para llamada');
-            motivo.motivo = 'Desea ser llamado';
+
+            if (contextos.includes('credito')) {
+                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito`;
+                datosCredito = { reportado: datos.reportado };
+                if (datos.reportado == 'SI') {
+                    datosCredito['EntidadReporta'] = datos.EntidadReporta;
+                }
+            } else if (contextos.includes('moto-credito')) {
+                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito para la moto ${datos.referencia}`;
+                datosCredito = { reportado: datos.reportado };
+                if (datos.reportado == 'SI') {
+                    datosCredito['EntidadReporta'] = datos.EntidadReporta;
+                }
+            } else {
+                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor inmediatamente`;
+            }
 
 
             agent.add(`¡Excelente Sr@ ${datos.nombre}! Muy pronto un asesor@ se pondrá en contacto contigo`);
@@ -246,47 +269,102 @@ var confirmaDatos = async(agent) => {
             // Contexto CITA
         } else if (contextos.includes('cita')) {
             console.log('guardarDatos 219: ', 'Confirma datos para cita');
-            var fecha = new Date(datos.fecha),
-                hora = new Date(datos.hora),
-                dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
-                timeOptions = { hour: 'numeric', minute: 'numeric' },
+            var fecha = new Date(datos.citafecha),
                 cita = {
                     dia: fecha,
-                    hora: hora,
+                    hora: fecha,
                     nombre: datos.nombre,
                     sucursal: datos.ciudad,
-                    telefono: datos.telefono,
+                    celular: datos.celular,
                     motivo: datos.motivoCita + ' de garantía',
                 };
             await fsActions.registrarCita(cita);
 
-            var localFecha = fecha.toLocaleDateString('es-ES', dateOptions);
-            var localHora = hora.toLocaleTimeString('es-ES', timeOptions);
-            console.log('guardarDatos 227: ', fecha, hora);
+            var date = fecha.toLocaleDateString(),
+                year = date.split('-')[0],
+                month = date.split('-')[1],
+                day = date.split('-')[2],
+                mes;
+            mes = await setMonth(month);
 
-            motivo.motivo = `Agendó cita para ${localFecha} a las ${localHora}`;
+            var time = fecha.toLocaleTimeString(),
+                hora = time.split(':'),
+                min = time.split(':');
+            console.log('guardarDatos 227: ', localFecha, localHora);
+
+            motivo.motivo = `${datos.nombre} agendó cita para ${day} de ${mes} del ${year} a las ${localHora}`;
 
 
-            agent.add(`Muy bien Sr@ ${datos.nombre}. Te asignamos cita para el día: ${localFecha} a las ${localHora}. ¿Deseas alguna otra información?`);
+            agent.add(`Muy bien Sr@ ${datos.nombre}. Te asignamos cita para el día: ${day} de ${mes} del ${year} a las ${localHora}. ¿Deseas alguna otra información?`);
             await webhookActions.opciones(agent);
 
 
 
         } else if (contextos.includes('interesado')) {
             console.log('guardarDatos 266: ', 'Confirma datos para ser contactado para una moto');
-            motivo.motivo = `Desea ser contactado por que está interesado en en la moto ${datos.referencia}`;
+            motivo.motivo = `${datos.nombre} desea ser contactado por que está interesado en la moto ${datos.referencia} y no fue encontrada en base de datos`;
 
 
             agent.add(`¡Excelente Sr@ ${datos.nombre}! Muy pronto un asesor@ se pondrá en contacto usted para informarle noticias sobre la moto ${datos.referencia}`);
 
             agent.add(`¿Deseas que te ayude con alguna otra cosa?`);
             await webhookActions.opciones(agent);
+
+
+        } else if (contextos.includes('suscripcion')) {
+            console.log('guardarDatos 266: ', 'Se ha suscrito');
+            motivo.motivo = `${datos.nombre} se ha suscrito para recibir información sobre eventos y promociones`;
         }
 
 
-        await fsActions.registrarCliente(cliente, motivo);
+        await fsActions.registrarCliente(cliente, motivo, datosCredito, suscripcion);
         return;
     }
+};
+
+var setMonth = async(month) => {
+    var mes;
+    switch (month) {
+        case 0:
+            mes = 'Enero';
+            break;
+        case 1:
+            mes = 'Febrero';
+            break;
+        case 2:
+            mes = 'Marzo';
+            break;
+        case 3:
+            mes = 'Abril';
+            break;
+        case 4:
+            mes = 'Mayo';
+            break;
+        case 5:
+            mes = 'Junio';
+            break;
+        case 6:
+            mes = 'Julio';
+            break;
+        case 7:
+            mes = 'Agosto';
+            break;
+        case 8:
+            mes = 'Septiembre';
+            break;
+        case 9:
+            mes = 'Octubre';
+            break;
+        case 10:
+            mes = 'Noviembre';
+            break;
+        case 11:
+            mes = 'Diciembre';
+            break;
+        default:
+            break;
+    }
+    return mes;
 };
 
 var modificaDatos = (agent) => {
@@ -296,7 +374,8 @@ var modificaDatos = (agent) => {
     agent.add(`¿Entonces tus datos quedarían así?`);
     if (params.nombre) { agent.add(`Nombre: ${params.nombre}`); }
     if (params.apellido) { agent.add(`Apellido: ${params.apellido}`); }
-    if (params.telefono) { agent.add(`Telefono: ${params.telefono}`); }
+    if (params.celular) { agent.add(`celular: ${params.celular}`); }
+    if (params.numCelular) { agent.add(`celular: ${params.numCelular}`); }
     if (params.email) { agent.add(`Email: ${params.email}`); }
     if (params.ciudad) { agent.add(`Ciudad: ${params.ubiacion}`); }
 
