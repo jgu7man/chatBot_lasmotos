@@ -276,7 +276,7 @@ var confirmaDatos = async(agent) => {
                     nombre: datos.nombre,
                     sucursal: datos.ciudad,
                     celular: datos.celular,
-                    motivo: datos.motivoCita + ' de garantía',
+                    motivo: datos.motivoCita,
                 };
             await fsActions.registrarCita(cita);
 

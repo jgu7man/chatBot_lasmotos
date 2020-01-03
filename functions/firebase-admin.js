@@ -7,8 +7,12 @@ admin.initializeApp({
     credential: admin.credential.cert(config),
     databaseURL: "https://lasmotoswebsite.firebaseio.com"
 });
-const fs = admin.firestore();
+const firestore = admin.firestore();
+const messaging = admin.messaging();
 
 
 
-module.exports = fs;
+module.exports = {
+    fs: firestore,
+    ms: messaging
+};

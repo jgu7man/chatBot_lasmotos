@@ -1,6 +1,6 @@
 /* jshint ignore:start */
 /* jshint esversion: 8 */
-const fs = require('../firebase-admin');
+const firebase = require('../firebase-admin');
 
 
 var registrarCliente = async function(cliente, motivo, datos, suscripcion) {
@@ -19,16 +19,17 @@ var registrarCliente = async function(cliente, motivo, datos, suscripcion) {
 
 
     // Comprobar si existe
-    var clientes = await fs.collection('clientes').where('celular', '==', cliente.celular).get();
+    var clientes = await firebase.fs.collection('clientes').where('celular', '==', cliente.celular).get();
     if (clientes.size > 0) {
         idCliente = clientes.docs[0].id;
         registrarMotivo(idCliente, motivo);
         if (datos) { registrarDatosCredito(idCliente, datos) }
         if (suscripcion) { addToSubscritions(idCliente, client) }
     } else {
-        var clienteNuevo = await fs.collection('clientes').add(client);
-        await fs.collection('clientes').doc(clienteNuevo.id).update({
-            idCliente: clienteNuevo.id
+        var clienteNuevo = await firebase.fs.collection('clientes').add(client);
+        await firebase.fs.collection('clientes').doc(clienteNuevo.id).update({
+            idCliente: clienteNuevo.id,
+            registrado: new Date()
         });
         var primerContacto = { fechayhora: new Date(), motivo: 'Registro Nuevo', via: '' };
         registrarMotivo(clienteNuevo.id, primerContacto);
@@ -41,7 +42,7 @@ var registrarCliente = async function(cliente, motivo, datos, suscripcion) {
 
 
 var registrarMotivo = async function(id, motivoContacto) {
-    fs.collection('clientes').doc(id).collection('contactos').add({
+    firebase.fs.collection('clientes').doc(id).collection('contactos').add({
         fechayhora: new Date(),
         motivo: motivoContacto.motivo,
         via: motivoContacto.via
@@ -51,7 +52,7 @@ var registrarMotivo = async function(id, motivoContacto) {
 
 var actualizarUltimoContacto = async function(id, via) {
     console.log('firestore.js 33: Actualizar ultimo contacto: ', id, 'via: ', via);
-    fs.collection('clientes').doc(id).update({
+    firebase.fs.collection('clientes').doc(id).update({
         ultimoContacto: new Date(),
         via: via,
         visto: false
@@ -62,7 +63,7 @@ var getSucursal = async function(city) {
     console.log('firestore 42: Consulta sucursal');
     var ciudad = city.trim()
     console.log(ciudad)
-    const sucRef = fs.collection('sucursales');
+    const sucRef = firebase.fs.collection('sucursales');
     var sucRes = await sucRef
         .where('tipo_suc', '==', 'tienda')
         .where('ciudadRef', '==', ciudad).get();
@@ -75,7 +76,7 @@ var getSucursal = async function(city) {
 var getMotoReferencia = async function(referencia) {
     console.log('firestore 51: Consulta moto');
     // var motoRef = referencia.toLowerCase();
-    const motoCol = fs.collection('motos_nuevas');
+    const motoCol = firebase.fs.collection('motos_nuevas');
     var motoRes = await motoCol.where('referencia', '==', referencia).get();
     var moto;
     if (motoRes.size > 0) { moto = motoRes.docs[0].data(); }
@@ -85,7 +86,7 @@ var getMotoReferencia = async function(referencia) {
 
 var getMotosUsadas = async() => {
     console.log('firestore 62:  Consulta moto');
-    const usadasCol = fs.collection('motos_usadas');
+    const usadasCol = firebase.fs.collection('motos_usadas');
     const usadasPromo = usadasCol.where('promo', '==', true).where('enStock', '==', true);
     var motosRes = await usadasPromo.get();
     var motosUsadas = [];
@@ -98,7 +99,7 @@ var getMotosUsadas = async() => {
 
 var getEventoProximo = async(ciudad) => {
     console.log('firestore 75: Consulta evento próximo');
-    const eventosCol = fs.collection('eventos');
+    const eventosCol = firebase.fs.collection('eventos');
     const eventoProxRes = await eventosCol
         .where('ciudadRef', '==', ciudad)
         .orderBy('inicia', "asc").get();
@@ -142,7 +143,7 @@ var getPromosMes = async(fecha) => {
 
     console.log(startMonth, endMonth);
 
-    const promosCol = fs.collection('promos');
+    const promosCol = firebase.fs.collection('promos');
     const promosRes = await promosCol
         .orderBy('inicia')
         .startAt(startMonth)
@@ -172,7 +173,7 @@ var getPromosMes = async(fecha) => {
 
 var getDisponibildadCita = async(fechayhora) => {
     console.log('firestore 115: Consulta disponibilidad');
-    const citasCol = fs.collection('citas');
+    const citasCol = firebase.fs.collection('citas');
     console.log(fechayhora);
     const citasRes = await citasCol.where('dia', '==', fechayhora).get();
     return citasRes.size < 3 ? 'disponible' : 'no disponible';
@@ -182,7 +183,7 @@ var getDisponibildadCita = async(fechayhora) => {
 
 var registrarCita = async(cita) => {
     console.log('firestore registrar cita');
-    const citasCol = fs.collection('citas');
+    const citasCol = firebase.fs.collection('citas');
     citasCol.add(cita).then(ref => {
         return citasCol.doc(ref.id).update({
             id: ref.id
@@ -196,14 +197,14 @@ var registrarCita = async(cita) => {
 
 var registrarDatosCredito = async(cid, datosCredito) => {
     console.log('firestore registrar datos de crédito')
-    const clientesCol = fs.collection('clientes');
+    const clientesCol = firebase.fs.collection('clientes');
     const creditoDoc = clientesCol.doc(cid).collection('datos').doc('credito')
     const res = await creditoDoc.set(datosCredito)
 }
 
 var addToSubscritions = async(cid, datos) => {
     console.log('firestore suscripcion')
-    const suscripcionCol = fs.collection('suscripciones');
+    const suscripcionCol = firebase.fs.collection('suscripciones');
     await suscripcionCol.doc(cid).set({
         nombre: datos.nombre,
         celular: datos.celular,
