@@ -2,6 +2,7 @@
 /* jshint esversion: 8 */
 const functions = require('firebase-functions');
 const dgWebhook = require('./dialogflow-webhook');
+const firebase = require('./firebase-admin');
 
 exports.chatBot = functions.https.onRequest((req, res) => {
     dgWebhook.webhook(req, res);
@@ -11,7 +12,10 @@ exports.notificaion_cliente = functions.firestore
     .document('clientes/{id}/contactos/{contacto}')
     .onCreate(async(snap, context) => {
         const mensaje = snap.data();
-        const ciudad = snap.ref.parent.parent.ciudad;
+        const ciudad = (await snap.ref.parent.parent.get()).get('ciudad');
+        var clienteRes = snap.ref.parent.parent.get();
+        var cliente = (await clienteRes).data();
+
         const payload = {
             notification: {
                 title: 'Nuevo contacto de cliente',
@@ -24,10 +28,23 @@ exports.notificaion_cliente = functions.firestore
             }
         };
 
+        var coll = firebase.fs.collection('sucursales');
 
+        var docs = await coll.where('referencia', '==', ciudad).get();
+        var idSucursal;
+        docs.forEach(doc => {
+            idSucursal = doc.id;
+        });
+        var sucRef = coll.doc(idSucursal);
+        await sucRef.collection('notificaciones').add({
+            title: payload.notification.title,
+            body: payload.notification.body,
+            cliente: cliente.idCliente
+        });
 
-        var sucursal = fs.collection('sucursales').where('referencia', '==', ciudad);
-        var tokenDoc = await sucursal.collection('tokens').doc('token_notificaciones').get();
-        var token = tokenDoc.data().token;
-        var res = await admin.messaging().sendToDevice(token, payload);
+        var unidades = await sucRef.collection('tokens').get();
+        unidades.forEach(unidad => {
+            var token = unidad.data().token;
+            firebase.ms.sendToDevice(token, payload);
+        });
     });
