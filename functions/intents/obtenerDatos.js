@@ -129,8 +129,7 @@ var obtenerApellido = async(agent) => {
         agent.context.set({ name: 'getApellido', lifespan: 2 });
 
 
-    } else
-    if (datos.apellido) {
+    } else if (datos.apellido) {
         console.log('obtenerDatos 108: ', 'capturó apellido');
         agent.context.delete('getNombreApellido');
         agent.context.delete('getApellido');

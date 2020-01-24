@@ -67,11 +67,11 @@ var revisionDatos = async(agent) => {
         agent.context.set({ name: 'datos', lifespan: 50 });
 
 
-        // } else if (!datos.apellido || datos.apellido.length == 0) {
+    } else if (!datos.apellido || datos.apellido.length == 0) {
 
-        //     console.log('guardarDatos 56: ', 'No hay apellido');
-        //     agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu apellido o apellidos?`);
-        //     agent.context.set({ name: 'getApellido', lifespan: 3 });
+        console.log('guardarDatos 56: ', 'No hay apellido');
+        agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu apellido o apellidos?`);
+        agent.context.set({ name: 'getApellido', lifespan: 3 });
 
     } else if (!datos.ciudad) {
         console.log('guardarDatos 67: ', 'No hay ciudad');
@@ -199,7 +199,8 @@ var confirmaDatos = async(agent) => {
         contextos = await webhookActions.contextsNames(agent),
         today = new Date();
     var datosCont = agent.context.get('datos'),
-        datos, cliente, motivo, datosCredito, suscripcion;
+        datos, cliente, registro, datosCredito, suscripcion;
+
     if (datosCont) {
         datos = datosCont.parameters;
         console.log('Sí hay contexto datos');
@@ -207,10 +208,10 @@ var confirmaDatos = async(agent) => {
 
     if (datos.apellido) { datos.nombre = `${datos.nombre} ${datos.apellido}`; }
     if (datos.numCelular) { datos.celular = datos.numCelular; }
-    if (!datos.email) { datos['email'] = ''; }
+    if (!datos.email) { datos['email'] = 'No dió email'; }
 
 
-    motivo = { fechayhora: today, motivo: '', via: 'chatbot' };
+    registro = { fechayhora: today, motivo: '', via: 'chatbot', contexto: '' };
     cliente = {
         nombre: datos.nombre,
         celular: datos.celular,
@@ -242,25 +243,26 @@ var confirmaDatos = async(agent) => {
             contextos.includes('moto-credito')) {
             console.log('guardarDatos 206: ', 'Confirma datos para llamada');
 
+            registro.contexto = 'solicitó una llamada';
+
             if (contextos.includes('credito')) {
-                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito`;
+                registro.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito`;
                 datosCredito = { reportado: datos.reportado };
-                if (datos.reportado == 'SI') {
-                    datosCredito['EntidadReporta'] = datos.EntidadReporta;
-                }
+
+                if (datos.reportado == 'SI') { datosCredito['EntidadReporta'] = datos.EntidadReporta; }
+
             } else if (contextos.includes('moto-credito')) {
-                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito para la moto ${datos.referencia}`;
+                registro.motivo = `${datos.nombre} desea ser llamado por un asesor por que está interesado en estudio de crédito para la moto ${datos.referencia}`;
+
                 datosCredito = { reportado: datos.reportado };
-                if (datos.reportado == 'SI') {
-                    datosCredito['EntidadReporta'] = datos.EntidadReporta;
-                }
+                if (datos.reportado == 'SI') { datosCredito['EntidadReporta'] = datos.EntidadReporta; }
+
             } else {
-                motivo.motivo = `${datos.nombre} desea ser llamado por un asesor inmediatamente`;
+                registro.motivo = `${datos.nombre} desea ser llamado por un asesor inmediatamente`;
             }
 
 
             agent.add(`¡Excelente Sr@ ${datos.nombre}! Muy pronto un asesor@ se pondrá en contacto contigo`);
-
             agent.add(`¿Deseas que te ayude con alguna otra cosa?`);
             await webhookActions.opciones(agent);
 
@@ -269,6 +271,8 @@ var confirmaDatos = async(agent) => {
             // Contexto CITA
         } else if (contextos.includes('cita')) {
             console.log('guardarDatos 219: ', 'Confirma datos para cita');
+            registro.contexto = 'registró una cita';
+
             var fecha = new Date(datos.citafecha),
                 cita = {
                     dia: fecha,
@@ -292,7 +296,7 @@ var confirmaDatos = async(agent) => {
                 min = time.split(':');
             console.log('guardarDatos 227: ', localFecha, localHora);
 
-            motivo.motivo = `${datos.nombre} agendó cita para ${day} de ${mes} del ${year} a las ${localHora}`;
+            registro.motivo = `${datos.nombre} agendó cita para ${day} de ${mes} del ${year} a las ${localHora}`;
 
 
             agent.add(`Muy bien Sr@ ${datos.nombre}. Te asignamos cita para el día: ${day} de ${mes} del ${year} a las ${localHora}. ¿Deseas alguna otra información?`);
@@ -302,7 +306,8 @@ var confirmaDatos = async(agent) => {
 
         } else if (contextos.includes('interesado')) {
             console.log('guardarDatos 266: ', 'Confirma datos para ser contactado para una moto');
-            motivo.motivo = `${datos.nombre} desea ser contactado por que está interesado en la moto ${datos.referencia} y no fue encontrada en base de datos`;
+            registro.contexto = 'está interesado';
+            registro.motivo = `${datos.nombre} desea ser contactado por que está interesado en la moto ${datos.referencia} y no fue encontrada en base de datos`;
 
 
             agent.add(`¡Excelente Sr@ ${datos.nombre}! Muy pronto un asesor@ se pondrá en contacto usted para informarle noticias sobre la moto ${datos.referencia}`);
@@ -313,11 +318,13 @@ var confirmaDatos = async(agent) => {
 
         } else if (contextos.includes('suscripcion')) {
             console.log('guardarDatos 266: ', 'Se ha suscrito');
-            motivo.motivo = `${datos.nombre} se ha suscrito para recibir información sobre eventos y promociones`;
+            registro.contexto = 'se suscribió';
+            suscripcion = true;
+            registro.motivo = `${datos.nombre} se ha suscrito para recibir información sobre eventos y promociones`;
         }
 
 
-        await fsActions.registrarCliente(cliente, motivo, datosCredito, suscripcion);
+        await fsActions.registrarCliente(cliente, registro, datosCredito, suscripcion);
         return;
     }
 };

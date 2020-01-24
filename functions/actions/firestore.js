@@ -3,58 +3,61 @@
 const firebase = require('../firebase-admin');
 
 
-var registrarCliente = async function(cliente, motivo, datos, suscripcion) {
+var registrarCliente = async function(cliente, contacto, datos, suscripcion) {
     var idCliente;
     // SortCliente
-    var client = {
-        nombre: cliente.nombre,
-        celular: cliente.celular,
-        ciudad: cliente.ciudad,
-        email: cliente.email,
-        ultimoContacto: new Date(),
-        via: 'ChatBot',
-        visto: false,
-    };
+    cliente['ultimoContacto'] = new Date()
+    cliente['ultimaVia'] = contacto.via
+    cliente['visto'] = false
 
 
-
-    // Comprobar si existe
+    // Comprobar si existe por celular registrado
     var clientes = await firebase.fs.collection('clientes').where('celular', '==', cliente.celular).get();
+
     if (clientes.size > 0) {
         idCliente = clientes.docs[0].id;
-        registrarMotivo(idCliente, motivo);
+        firebase.fs.collection('clientes').doc(idCliente).set({ contextos: [contacto.contexto] }, { merge: true });
+        var actividad = { fechayhora: new Date, actividad: 'Registró datos en chat' }
+        registrarContacto(idCliente, contacto);
+        registroActividad(clienteNuevo.id, actividad);
         if (datos) { registrarDatosCredito(idCliente, datos) }
         if (suscripcion) { addToSubscritions(idCliente, client) }
+
+
     } else {
         var clienteNuevo = await firebase.fs.collection('clientes').add(client);
         await firebase.fs.collection('clientes').doc(clienteNuevo.id).update({
             idCliente: clienteNuevo.id,
-            registrado: new Date()
+            registrado: new Date(),
+            contextos: [contacto.contexto]
         });
-        var primerContacto = { fechayhora: new Date(), motivo: 'Registro Nuevo', via: '' };
-        registrarMotivo(clienteNuevo.id, primerContacto);
-        registrarMotivo(clienteNuevo.id, motivo);
+        var primerContacto = { fechayhora: new Date(), actividad: 'Se dió de alta', via: 'chatbot' };
+        registroActividad(clienteNuevo.id, primerContacto);
+        registrarContacto(clienteNuevo.id, contacto);
         if (datos) { registrarDatosCredito(clienteNuevo.id, datos) }
         if (suscripcion) { addToSubscritions(clienteNuevo.id, client) }
-
     }
 };
 
-
-var registrarMotivo = async function(id, motivoContacto) {
-    firebase.fs.collection('clientes').doc(id).collection('contactos').add({
+var registroActividad = async function(id, actividad) {
+    firebase.fs.collection('clientes').doc(id).collection('actividades').add({
         fechayhora: new Date(),
-        motivo: motivoContacto.motivo,
-        via: motivoContacto.via
+        actividad: actividad.actividad,
     });
-    actualizarUltimoContacto(id, motivoContacto.via);
 };
 
-var actualizarUltimoContacto = async function(id, via) {
-    console.log('firestore.js 33: Actualizar ultimo contacto: ', id, 'via: ', via);
+
+var registrarContacto = async function(id, contacto) {
+    firebase.fs.collection('clientes').doc(id)
+        .collection('contactos').add(contacto);
+    actualizarUltimoContacto(id, contacto);
+};
+
+var actualizarUltimoContacto = async function(id, contacto) {
+    console.log('firestore.js 33: Actualizar ultimo contacto: ', id, 'via: ', contacto.via);
     firebase.fs.collection('clientes').doc(id).update({
-        ultimoContacto: new Date(),
-        via: via,
+        ultimoContacto: contacto.fechayhora,
+        via: contacto.via,
         visto: false
     });
 };
@@ -216,7 +219,7 @@ var addToSubscritions = async(cid, datos) => {
 
 module.exports = {
     registrarCliente: registrarCliente,
-    registrarMotivo: registrarMotivo,
+    registrarContacto: registrarContacto,
     actualizarUltimoContacto: actualizarUltimoContacto,
     getSucursal: getSucursal,
     getMotoReferencia: getMotoReferencia,
