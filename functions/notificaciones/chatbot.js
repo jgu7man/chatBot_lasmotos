@@ -3,7 +3,7 @@
 
 const firebase = require('../firebase-admin');
 
-var registro_cliente = async(snap, context) => {
+var registro_cliente = async(snap) => {
     const registro = snap.data();
     const ciudad = (await snap.ref.parent.parent.get()).get('ciudad');
     const clienteRes = snap.ref.parent.parent.get();
@@ -33,7 +33,7 @@ var registro_cliente = async(snap, context) => {
         idref: cliente.idCliente,
         seccion: 'cliente',
         enlace: `https://tiendalasmotos.com/panel/cliente/${cliente.idCliente}`,
-        notified: true
+        visto: false
     });
 
     var userToken = await firebase.fs.doc(`clientes/${idCliente}/tokens/notificaciones`).get();

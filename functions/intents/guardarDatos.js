@@ -87,13 +87,19 @@ var revisionDatos = async(agent) => {
         agent.add(`Sr@ ${datos.nombre} ¿Me puedes decir tu celular?`);
         agent.context.set({ name: 'getcelular', lifespan: 2 });
 
+    } else if (!datos.email && !datos.si_no_email) {
+        console.log('guardarDatos 61: ', 'No hay celular');
+        agent.add(`Sr@ ${datos.nombre} ¿Te gustaría proporcinarnos tu email, es opcional?`);
+        agent.context.set({ name: 'getemail', lifespan: 2 });
+
 
     } else {
 
         agent.context.delete('obtenerubicacion-followup');
-        agent.context.delete('getNombre');
-        agent.context.delete('getCiudad');
-        agent.context.delete('getCelular');
+        agent.context.delete('getnombre');
+        agent.context.delete('getciudad');
+        agent.context.delete('getcelular');
+        agent.context.delete('getemail');
 
         console.log('guardarDatos 76: ', 'Hay todos los datos');
         if (contextos.includes('deseallamada') ||

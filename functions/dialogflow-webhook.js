@@ -35,6 +35,7 @@ var webhook = async function webhook(req, res) {
         intentMap.set('Obtener Celular', obtenerDatos.obtenerCelular);
         intentMap.set('Obtener Ciudad', obtenerDatos.obtenerCiudad);
         intentMap.set('Obtener Ciudad - no', obtenerDatos.obtenerCiudad_no);
+        intentMap.set('Obtener Email', obtenerDatos.obtenerEmail);
 
         intentMap.set('Consulta moto', motos.consultaMoto);
         intentMap.set('Consulta moto - yes', motos.consultaMoto_yes);

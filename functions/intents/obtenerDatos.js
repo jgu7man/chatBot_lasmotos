@@ -343,6 +343,22 @@ var obtenerCelularEmail = async(agent) => {
     agent.add(`Sr@ ${datos.nombre} ¿Estarías interesado en regalarnos ${datosSolicitar} para enviarte información sobre nuestras promociones y eventos?`);
 };
 
+var obtenerEmail = async(agent) => {
+    var datosCont = agent.context.get('datos');
+    var datos;
+    if (datosCont) {
+        datos = datosCont.parameters;
+    }
+    var datosSolicitar;
+
+    if (datos.si_no_email == 'NO') {
+        agent.add(`Está bien, muchas gracias`);
+        await datosDoc.revisionDatos(agent);
+    } else {
+        await datosDoc.revisionDatos(agent);
+    }
+};
+
 
 module.exports = {
     obtenerNombre: obtenerNombre,
@@ -351,4 +367,5 @@ module.exports = {
     obtenerCiudad_no: obtenerCiudad_no,
     obtenerCelular: obtenerCelular,
     obtenerCelularEmail: obtenerCelularEmail,
+    obtenerEmail: obtenerEmail
 };

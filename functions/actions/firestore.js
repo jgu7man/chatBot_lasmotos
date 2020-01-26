@@ -21,11 +21,12 @@ var registrarCliente = async function(cliente, contacto, datos, suscripcion) {
         registrarContacto(idCliente, contacto);
         registroActividad(clienteNuevo.id, actividad);
         if (datos) { registrarDatosCredito(idCliente, datos) }
-        if (suscripcion) { addToSubscritions(idCliente, client) }
+        if (suscripcion) { addToSubscritions(idCliente, cliente) }
 
 
     } else {
-        var clienteNuevo = await firebase.fs.collection('clientes').add(client);
+        console.log(cliente)
+        var clienteNuevo = await firebase.fs.collection('clientes').add(cliente);
         await firebase.fs.collection('clientes').doc(clienteNuevo.id).update({
             idCliente: clienteNuevo.id,
             registrado: new Date(),

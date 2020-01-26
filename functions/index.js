@@ -1,5 +1,5 @@
-/*jshint sub:true*/
-/* jshint esversion: 8 */
+// /*jshint sub:true*/
+// /* jshint esversion: 8 */
 const functions = require('firebase-functions');
 const dgWebhook = require('./dialogflow-webhook');
 const firebase = require('./firebase-admin');
@@ -10,7 +10,7 @@ exports.chatBot = functions.https.onRequest((req, res) => {
 });
 
 exports.notificacion_cliente_chatbot = functions.firestore
-    .document('clientes/{id}/contactos/{id}')
-    .onCreate(async(snap, context) => {
-        notificaciones_chatbot.registro_cliente(snap, context);
+    .document('clientes/{idCliente}/contactos/{id}')
+    .onCreate((snap, context) => {
+        notificaciones_chatbot.registro_cliente(snap);
     });
