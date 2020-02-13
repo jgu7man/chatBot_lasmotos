@@ -14,3 +14,9 @@ exports.notificacion_cliente_chatbot = functions.firestore
     .onCreate((snap, context) => {
         notificaciones_chatbot.registro_cliente(snap);
     });
+
+exports.notificacion_cliente_chatbot = functions.firestore
+    .document('clientes/{idCliente}/contactos/{id}')
+    .onCreate((snap, context) => {
+        notificaciones_chatbot.registro_cliente(snap);
+    });

@@ -21,8 +21,10 @@ const
 var webhook = async function webhook(req, res) {
     const agent = new WebhookClient({ request: req, response: res });
     // console.log('Dialogflow Request headers: ' + JSON.stringify(req.headers));
-    console.log('intent: ' + JSON.stringify(req.body.queryResult.intent.displayName));
-    console.log(req.body.queryResult);
+    console.log('intent: ', agent.intent);
+    console.log('body: ', JSON.stringify(req.body));
+    console.log('requesSource: ', agent.requestSource);
+    console.log('Query: ', agent.query);
 
     let intentMap = new Map();
     try {

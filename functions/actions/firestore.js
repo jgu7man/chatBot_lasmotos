@@ -25,14 +25,13 @@ var registrarCliente = async function(cliente, contacto, datos, suscripcion) {
 
 
     } else {
-        console.log(cliente)
         var clienteNuevo = await firebase.fs.collection('clientes').add(cliente);
         await firebase.fs.collection('clientes').doc(clienteNuevo.id).update({
             idCliente: clienteNuevo.id,
             registrado: new Date(),
             contextos: [contacto.contexto]
         });
-        var primerContacto = { fechayhora: new Date(), actividad: 'Se dió de alta', via: 'chatbot' };
+        var primerContacto = { fechayhora: new Date(), actividad: 'Se dió de alta', via: contacto.via };
         registroActividad(clienteNuevo.id, primerContacto);
         registrarContacto(clienteNuevo.id, contacto);
         if (datos) { registrarDatosCredito(clienteNuevo.id, datos) }
@@ -186,15 +185,10 @@ var getDisponibildadCita = async(fechayhora) => {
 };
 
 var registrarCita = async(cita) => {
-    console.log('firestore registrar cita');
     const citasCol = firebase.fs.collection('citas');
-    citasCol.add(cita).then(ref => {
-        return citasCol.doc(ref.id).update({
-            id: ref.id
-        });
-    }).catch(err => {
-        console.log(err);
-    });
+
+    var citaRef = await citasCol.add(cita)
+    await citasCol.doc(citaRef.id).update({ id: citaRef.id })
 
     return 'cita agendada';
 }
