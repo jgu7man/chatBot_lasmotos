@@ -20,11 +20,15 @@ const
 
 var webhook = async function webhook(req, res) {
     const agent = new WebhookClient({ request: req, response: res });
-    // console.log('Dialogflow Request headers: ' + JSON.stringify(req.headers));
-    console.log('intent: ', agent.intent);
-    console.log('body: ', JSON.stringify(req.body));
-    console.log('requesSource: ', agent.requestSource);
-    console.log('Query: ', agent.query);
+    // console.log('body: ', req.body);
+
+    console.log({
+        intent: agent.intent,
+        Query: agent.query,
+        requesSource: agent.requestSource,
+        session: agent.session,
+        consoleMessages: agent.consoleMessages
+    });
 
     let intentMap = new Map();
     try {
@@ -66,11 +70,18 @@ var webhook = async function webhook(req, res) {
 
         intentMap.set('Fallback general', fallback.fallbackGeneral);
 
-        agent.handleRequest(intentMap);
+        agent.handleRequest(intentMap)
+            .then(res => console.log('contestado'))
+            .catch(error => {
+                console.log('Error respuesta', error);
+                intentMap.set('Error de consola', fallback.errorDeConsola);
+                agent.handleRequest(intentMap);
+            });
     } catch (error) {
         intentMap.set('Error de consola', fallback.errorDeConsola);
         agent.handleRequest(intentMap);
     }
+
 };
 
 module.exports = {

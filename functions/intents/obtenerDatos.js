@@ -51,11 +51,19 @@ var obtenerNombre = async(agent) => {
 
 
             // respuesta si ya dio información de la moto y preguntó nombre después
-        } else if (contextos.includes('yadioinfomoto')) {
+        } else if (contextos.includes('moto-credito')) {
             console.log('obtenerDatos 52: ', 'Ya dio información de moto');
-            agent.add(`${nombre} ¿Deseas saber opciones de crédito para esta moto?`);
-            agent.context.set({ name: 'consultaCredito', lifespan: 3 });
-            agent.context.set({ name: 'consultamoto-followup', lifespan: 1 });
+            agent.add(gracias);
+            agent.add(`Manejamos posibilidades de crédito para trabajadores, pensionados, amas de casa, crédito Brilla, incluso hasta para reportados.`);
+            agent.add(`Me puedes decir ¿En qué ciudad te encuentras? Para saber de qué manera podemos atenderte`);
+            agent.add(new Suggestion(`Riohacha`));
+            agent.add(new Suggestion(`Santa Marta`));
+            agent.add(new Suggestion(`Otro`));
+            agent.context.set({ name: 'getCiudad', lifespan: 2 });
+            agent.context.set({ name: 'moto-credito', lifespan: 10 });
+            agent.context.delete('obtenernombre-followup');
+            agent.context.delete('consultamoto-followup');
+
 
 
 
@@ -204,17 +212,22 @@ var obtenerCiudad = async(agent) => {
 
 
 
-    } else if (datos.ciudad && (contextos.includes('credito') ||
-            contextos.includes('moto-credito'))) {
+    } else if (datos.ciudad && (
+            contextos.includes('credito') ||
+            contextos.includes('moto-credito')
+        )) {
         console.log('obtenerDatos 175: ', 'Preguntar si es reportado');
         if (datos.reportado == 'reportado') {
             agent.add(`Bella ciudad ${datos.ciudad}. ¿Seguro que estás reportado?`);
         } else {
-            agent.add(`Bella ciudad ${datos.ciudad}. Para realiza el estudio ¿Me podrías decir si estás reportad@?`);
+            agent.add(`Bella ciudad ${datos.ciudad}. Para realiza un estudio de credito ¿Me podrías decir si estás reportad@?`);
         }
 
         agent.context.set({ name: 'preguntarreportado', lifespan: 2 });
         agent.context.delete('obtenerubicacion-followup');
+
+
+
 
 
     } else if (datos.ciudad && contextos.includes('evento')) {

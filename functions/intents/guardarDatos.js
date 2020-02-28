@@ -107,7 +107,7 @@ var revisionDatos = async(agent) => {
             contextos.includes('interesado')) {
 
             console.log('guardarDatos 81: ', 'Respuesta para llamadas');
-            llamadaResponse.confirmarDatosLlamada(agent);
+            await llamadaResponse.confirmarDatosLlamada(agent);
 
 
         } else if (contextos.includes('cita')) {
@@ -117,7 +117,7 @@ var revisionDatos = async(agent) => {
 
         } else if (contextos.includes('suscripcion')) {
             console.log('guardarDatos 91: ', 'Respuesta autorizacion-moto-credito');
-            llamadaResponse.confirmarDatosLlamada(agent);
+            await llamadaResponse.confirmarDatosLlamada(agent);
 
 
 

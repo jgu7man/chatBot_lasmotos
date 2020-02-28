@@ -69,10 +69,9 @@ var motoCard = async(agent) => {
             card.setButton({ text: 'Ver en el catálogo', url: 'https://tiendalasmotos.com.co' });
             agent.add(card);
             agent.context.delete('getmoto');
-            agent.context.set({ name: 'yaDioInfoMoto', lifespan: 10 });
             agent.add('¿Deseas saber opciones de crédito para esta moto?');
             agent.context.set({ name: 'moto-credito', lifespan: 10 });
-            // await despuesDeMoto(agent);
+            agent.context.set({ name: 'Consultamoto-followup', lifespan: 10 });
         }
     }
 
@@ -118,9 +117,10 @@ var motoEquivalente = async(agent) => {
         card.setImage(moto.imagenUrl);
         card.setButton({ text: 'Ver en el catálogo', url: 'https://tiendalasmotos.com.co' });
         agent.add(card);
-        agent.context.set({ name: 'yaDioInfoMoto', lifespan: 10 });
         agent.add('¿Deseas saber opciones de crédito para esta moto?');
         agent.context.set({ name: 'moto-credito', lifespan: 10 });
+        agent.context.set({ name: 'Consultamoto-followup', lifespan: 10 });
+
     }
 
 };
@@ -141,9 +141,7 @@ var infoMotosUsadas = async(agent) => {
 
             card.setText(`Tenemos la ${moto.referencia} que tiene un precio de ${moto.precio} ${SOAT}.`);
             card.setImage(moto.imagenUrl);
-            // card.setButton({ text: 'Ver en el catálogo', url: 'https://tiendalasmotos.com.co' });
             agent.add(card);
-            agent.context.set({ name: 'yaDioInfoMoto', lifespan: 10 });
 
         });
 
@@ -187,19 +185,31 @@ var despuesDeMoto = async(agent) => {
 
 var consultaMoto_yes = async(agent) => {
     var datosCont = agent.context.get('datos');
-    var datos;
+    var datos = {};
     if (datosCont) {
         datos = datosCont.parameters;
     } else {
         datos = { nombre: '' };
     }
 
-    console.log('motosInfo 138: ', 'Si seguimiento moto');
+    if (!datos['nombre']) {
+        agent.add(`Ok, Sr@, ¿Me podrías decir con quien tengo el gusto?`);
+        agent.context.set({ name: 'getnombre', lifespan: 5 });
+    } else {
 
-    agent.add(`Ok, Sr@ ${datos.nombre} Necesitaré tomar sus datos para llamarle. Por ley, debe AUTORIZAR que guardemos sus datos. ¿Autorizas que guardemos tus datos?`);
-    agent.context.set({ name: 'autorizacion', lifespan: 5 });
-    agent.context.set({ name: 'suscripcion', lifespan: 15 });
-    agent.context.delete('Consultamoto-followup');
+        console.log('motosInfo 138: ', 'Si seguimiento moto');
+
+        agent.add(`Ok, Sr@ ${datos.nombre}, mire.`);
+        agent.add(`Manejamos posibilidades de crédito para trabajadores, pensionados, amas de casa, crédito Brilla, incluso hasta para reportados.`);
+        agent.add(`Me puedes decir ¿En qué ciudad te encuentras? Para saber de qué manera podemos atenderte`);
+        agent.add(new Suggestion(`Riohacha`));
+        agent.add(new Suggestion(`Santa Marta`));
+        agent.add(new Suggestion(`Otro`));
+        agent.context.set({ name: 'getCiudad', lifespan: 2 });
+        agent.context.set({ name: 'moto-credito', lifespan: 10 });
+        agent.context.delete('Consultamoto-followup');
+    }
+
 
 
 };
@@ -210,6 +220,8 @@ var consultaMoto_no = async(agent) => {
     var datos;
     if (datosCont) {
         datos = datosCont.parameters;
+    } else {
+        datos = { nombre: '' };
     }
     agent.context.delete('Consultamoto-followup');
 

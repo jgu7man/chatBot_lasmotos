@@ -49,16 +49,17 @@ exports.consultaEvento = async(agent) => {
             card.setText(`${start} Tenemos un evento de ${evento.tipo} en ${evento.direccion} el día ${fecha} a las ${hora}. Estaremos en ${evento.ciudad} por ${evento.indicaciones}. ${end}`);
             card.setImage(evento.imgLugarUrl);
             agent.add(card);
+            await obtnerDatos.obtenerCelularEmail(agent);
 
 
 
         } else {
             console.log('eventos-promos 35: ', 'No hay evento');
             agent.add(`Lo siento Sr@ ${datos.nombre} no tenemos por el momento algun evento programado en tu ciudad. Te invito a que nos sigas en nuestras redes sociales para que estés al pendiente de nuestros próximos eventos`);
+            await obtnerDatos.obtenerCelularEmail(agent);
 
         }
 
-        await obtnerDatos.obtenerCelularEmail(agent);
 
 
 
@@ -119,9 +120,9 @@ exports.promosVigentes = async(agent) => {
     } else {
         console.log('eventos-promos 35: ', 'No hay promos');
         agent.add(`${datos.nombre} Lo siento, por ahora no tenemos alguna promoción`);
+        await obtnerDatos.obtenerCelularEmail(agent);
     }
 
-    await obtnerDatos.obtenerCelularEmail(agent);
 
 };
 

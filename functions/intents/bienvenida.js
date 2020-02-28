@@ -45,7 +45,7 @@ exports.bienvenida = async(agent) => {
         // Respuesta: CARD con  información de la moto consultada
         if (params.referencia) {
 
-            console.log('bienvenida 43: ', 'Responde con informacion de moto');
+            console.log('Bienvenida 48: ', 'Responde con informacion de moto');
             agent.add(saludo);
             await motosResponse.motoCard(agent);
 

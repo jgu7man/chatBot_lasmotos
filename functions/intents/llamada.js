@@ -26,7 +26,7 @@ exports.llamadaQuestion = async(agent) => {
         if (llamada == 'SI') {
             agent.add(`Para cumplir requisitos de ley, necesito que autorices que guardaremos tus datos.`);
 
-            let card = new Card('Consulta nuestro auerdo de confidencialidad de datos');
+            let card = new Card('Consulta nuestro acuerdo de confidencialidad de datos');
             card.setButton({ text: 'Política de privacidad', url: 'https://tiendalasmotos.com.co/pdp' });
             agent.add(card);
 
